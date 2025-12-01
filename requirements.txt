@@ -1,12 +1,9 @@
 fastapi
 uvicorn
 python-dotenv
-google-generativeai
-chromadb
 supabase
+chromadb
+google-generativeai
 python-multipart
-requests
-numpy
-pydantic
-pydantic-settings
-rank_bm25
+langchain-text-splitters
+httpx
