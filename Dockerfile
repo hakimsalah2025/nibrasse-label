@@ -23,8 +23,8 @@ COPY . .
 # Make port 8000 available
 EXPOSE 8000
 
-# Add backend directory to Python path
-ENV PYTHONPATH=/app:$PYTHONPATH
+# Set working directory to backend (fixes 'from app.x' imports)
+WORKDIR /app/backend
 
-# Run app when container launches (from /app directory)
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn from backend directory
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
