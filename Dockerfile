@@ -25,6 +25,8 @@ COPY . .
 ENV PORT=8000
 EXPOSE $PORT
 
-# Run app.py when the container launches
-# We use the shell form to allow variable expansion for $PORT
-CMD uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Set working directory to backend folder (fixes module imports)
+WORKDIR /app/backend
+
+# Run app when container launches
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
