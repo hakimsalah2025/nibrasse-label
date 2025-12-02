@@ -23,5 +23,8 @@ COPY . .
 # Make port 8000 available
 EXPOSE 8000
 
+# Set working directory to backend (so imports work correctly)
+WORKDIR /app/backend
+
 # Run app when container launches
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
