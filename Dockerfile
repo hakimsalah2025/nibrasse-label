@@ -20,11 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the current directory contents into the container at /app
 COPY . .
 
-# Make port 8000 available to the world outside this container
-# Railway will override this with the $PORT environment variable
-ENV PORT=8000
-EXPOSE $PORT
+# Make port 8000 available
+EXPOSE 8000
 
-# Run app.py when the container launches
-# Use sh -c to properly expand the PORT variable
-CMD ["sh", "-c", "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Run app when container launches
+CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
