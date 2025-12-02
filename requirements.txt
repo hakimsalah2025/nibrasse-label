@@ -5,6 +5,7 @@ google-generativeai
 chromadb
 supabase
 python-multipart
+langchain-text-splitters
 requests
 numpy
 pydantic
