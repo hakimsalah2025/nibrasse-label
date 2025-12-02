@@ -4,24 +4,14 @@
 
 **Bienvenue dans NIBRASSE** - votre assistant intelligent pour la recherche dans les documents académiques en langues arabe, française et anglaise.
 
-**Version :** 1.5.0  
-**Date :** 1 décembre 2025
+**Version :** 1.1.0  
+**Date :** 26 novembre 2025
 
 ---
 
-## ✨ Nouvelles fonctionnalités (v1.5)
+## ✨ Nouveauté : Numéros de page automatiques !
 
-### 🎨 Mode Clair/Sombre
-
-Basculez entre le mode sombre et le mode clair en cliquant sur l'icône **🌙/☀️** en haut à gauche, à côté du bouton "Nouvelle conversation".
-
-### 🔒 Traitement en mémoire (Privacy)
-
-Vos documents sont maintenant **traités directement en mémoire** sans être stockés sur le disque local, améliorant la confidentialité et la compatibilité avec les déploiements cloud (Vercel).
-
-### 📄 Numéros de page automatiques
-
-NIBRASSE affiche automatiquement **les numéros de page** dans les références, facilitant la vérification des sources.
+NIBRASSE affiche maintenant **automatiquement les numéros de page** dans les références, facilitant la vérification des sources et la recherche des passages citésدان
 
 **Avant:**
 ```
@@ -370,15 +360,15 @@ Convertissez d'abord vos PDF en .txt avec OCR (voir section "Préparation des do
 
 **R:** **Oui**, pour :
 - Les appels API Google Gemini (génération de réponses)
-- La connexion à Supabase (base de données vectorielle)
+- La connexion à Supabase (base de données)
 
-Les documents sont **traités en mémoire** (v1.5+) et stockés uniquement dans Supabase.
+Les documents sont stockés localement dans `backend/data/`.
 
 ### Q: Les données sont-elles sécurisées ?
 
 **R:** 
-- ✅ Documents traités en mémoire (pas de stockage local permanent)
-- ✅ Base de données Supabase avec authentification sécurisée
+- ✅ Documents stockés localement sur votre machine
+- ✅ Base de données Supabase avec authentification
 - ✅ Pas de partage de données avec des tiers
 - ⚠️ Les requêtes sont traitées par Google Gemini (API cloud)
 
@@ -506,29 +496,31 @@ Avant votre première utilisation :
 
 ---
 
-**Version :** 1.5.0  
-**Dernière mise à jour :** 1 décembre 2025  
+**Version :** 1.1.0  
+**Dernière mise à jour :** 26 novembre 2025  
 **Développé avec ❤️ pour la recherche académique**
 
 ---
 
-## 📈 Nouveautés de la version 1.5.0
+## 📈 Nouveautés de la version 1.1.0
 
 ### ✨ Ajouté
-- 🎨 **Mode Clair/Sombre** : Interface adaptable pour plus de confort
-- 🔒 **Traitement en mémoire** : Pas de stockage local (Privacy + Vercel)
-- ☁️ **Migration Supabase** : Base vectorielle cloud performante
-- 📊 **Insertion par lots** : Gère les gros fichiers sans timeout
+- Extraction automatique des numéros de page
+- Support de 4 formats de marqueurs de page
+- Affichage des numéros dans les références
+- Statistiques de couverture lors de l'upload
+- Guide utilisateur en français
 
 ### 🔧 Amélioré
-- Interface utilisateur modernisée (v1.5)
-- Gestion des erreurs détaillée
-- Performance d'upload (+40% plus rapide avec batching)
-- Compatibilité cloud (Vercel)
+- Performance du chunking (+15% plus rapide)
+- Qualité des citations (plus précises)
+- Interface utilisateur (messages plus clairs)
+- Documentation complète
 
-### 🗑️ Supprimé
-- ChromaDB (remplacé par Supabase)
-- Stockage local des fichiers uploadés
+### 🐛 Corrigé
+- Problèmes d'encodage UTF-8
+- Erreurs lors de gros fichiers
+- Affichage des métadonnées
 
 ---
 

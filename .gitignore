@@ -1,13 +1,12 @@
-# Environment variables (contains API keys)
-.env
-backend/.env
-
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+venv/
+ENV/
 build/
 develop-eggs/
 dist/
@@ -24,10 +23,9 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
-venv/
-ENV/
-env/
+# Environment
+.env
+.venv
 
 # IDE
 .vscode/
@@ -36,25 +34,16 @@ env/
 *.swo
 *~
 
-# OS
-.DS_Store
-Thumbs.db
+# ChromaDB
+data/chroma_db/
 
 # Logs
 *.log
 
-# Test coverage
-.coverage
-htmlcov/
+# OS
+.DS_Store
+Thumbs.db
 
-# Database (local only)
-*.db
-*.sqlite
-*.sqlite3
-
-# BM25 Index (regenerated on startup)
-backend/data/bm25_index.pkl
-
-# Temporary files
-*.tmp
-*.temp
+# Test files
+tests/result.txt
+tests/import_log.txt

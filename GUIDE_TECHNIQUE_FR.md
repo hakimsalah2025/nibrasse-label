@@ -4,9 +4,9 @@
 
 NIBRASSE est un système RAG (Retrieval-Augmented Generation) avancé optimisé pour les documents académiques en langue arabe, avec support multilingue (arabe, français, anglais).
 
-**Version :** 1.5.0  
-**Date :** 1 décembre 2025  
-**Nouveautés :** Supabase (pgvector), In-Memory Processing, Dark/Light Mode
+**Version :** 1.1.0  
+**Date :** 26 novembre 2025  
+**Nouveauté :** Extraction automatique des numéros de page dans les citations
 
 ---
 
@@ -31,8 +31,9 @@ Intelligence Artificielle
 └── Gemini 1.5 Pro (reranking)
 
 Bases de données
-├── Supabase (PostgreSQL + pgvector)
-└── BM25 (recherche lexicale en mémoire)
+├── ChromaDB (base vectorielle)
+├── Supabase (PostgreSQL)
+└── BM25 (recherche lexicale)
 
 Traitement de texte
 ├── LangChain (chunking)
@@ -49,14 +50,14 @@ Traitement de texte
 ```python
 # Fichier: backend/app/services/ingestion.py
 
-def process_file_content(content: str, filename: str):
+def process_document(file_path: str):
     """
-    Processus complet d'ingestion (✨ v1.5 In-Memory):
-    1. Réception du contenu (pas de fichier local)
-    2. Extraction des numéros de page
+    Processus complet d'ingestion:
+    1. Lecture du fichier
+    2. Extraction des numéros de page ✨ NOUVEAU
     3. Découpage intelligent (chunking)
-    4. Génération des embeddings (batch)
-    5. Stockage Supabase uniquement
+    4. Génération des embeddings
+    5. Stockage multi-base de données
     """
 ```
 
@@ -139,33 +140,41 @@ def chunk_text(text: str) -> list[dict]:
     return chunks_with_metadata
 ```
 
-#### 1.3 Stockage Supabase (✨ v1.5)
+#### 1.3 Stockage multi-base
 
 ```python
-# Supabase: Stockage vectoriel + métadonnées
-chunks_data = []
-for i, chunk in enumerate(chunks_with_metadata):
-    chunks_data.append({
-        "document_id": doc_id,
-        "chunk_index": chunk['index'],
-        "content": chunk['text'],
-        "embedding": embeddings[i],  # ✨ Vecteur pgvector
-        "metadata": {
-            "page_number": chunk.get("page_number"),
-            "has_page_marker": chunk.get("has_page_marker")
-        }
-    })
+# ChromaDB: Stockage vectoriel
+metadatas = [{
+    "document_id": doc_id,
+    "chunk_index": i,
+    "filename": filename,
+    "page_number": chunk_dict.get("page_number"),  # ✨
+    "has_page_marker": chunk_dict.get("has_page_marker")  # ✨
+}]
 
-# Insertion par lots (évite les timeouts)
-batch_size = 100
-for i in range(0, len(chunks_data), batch_size):
-    batch = chunks_data[i:i + batch_size]
-    supabase.table("chunk").insert(batch).execute()
+add_documents_to_chroma(
+    ids=chroma_ids,
+    documents=chunks,
+    metadatas=metadatas,
+    embeddings=embeddings
+)
 
-# BM25: Index lexical en mémoire
+# Supabase: Métadonnées structurées
+supabase.table("chunk").insert({
+    "document_id": doc_id,
+    "chunk_index": i,
+    "content": chunk_dict["text"],
+    "embedding_id": chroma_ids[i],
+    "metadata": {  # ✨ Stocké en JSON
+        "page_number": chunk_dict.get("page_number"),
+        "has_page_marker": chunk_dict.get("has_page_marker")
+    }
+})
+
+# BM25: Index lexical
 bm25_service.build_index(
-    corpus=texts_to_embed,
-    metadatas=new_metadatas
+    corpus=current_corpus,
+    metadatas=current_metadatas
 )
 ```
 
@@ -191,11 +200,12 @@ def hybrid_search(query: str, top_k: int = 10):
 # Vectorisation de la requête
 query_embedding = get_embedding(query, is_query=True)
 
-# Recherche dans Supabase (pgvector)
-results = supabase.rpc('match_documents', {
-    'query_embedding': query_embedding,
-    'match_count': top_k
-}).execute()
+# Recherche dans ChromaDB
+results = collection.query(
+    query_embeddings=[query_embedding],
+    n_results=top_k,
+    include=['documents', 'metadatas', 'distances']
+)
 ```
 
 #### 2.2 Recherche lexicale BM25
@@ -426,35 +436,23 @@ CREATE INDEX idx_chunks_chunk_index ON chunk(chunk_index);
 CREATE INDEX idx_documents_filename ON documents(filename);
 ```
 
-#### Supabase pgvector (✨ v1.5)
+#### ChromaDB Collections
 
-```sql
--- Extension pgvector
-CREATE EXTENSION IF NOT EXISTS vector;
-
--- Colonne embedding (dimension 768 pour Gemini)
-ALTER TABLE chunk ADD COLUMN embedding vector(768);
-
--- Index HNSW pour recherche rapide
-CREATE INDEX ON chunk USING hnsw (embedding vector_cosine_ops);
-
--- Fonction de recherche par similarité
-CREATE OR REPLACE FUNCTION match_documents(
-  query_embedding vector(768),
-  match_count int
+```python
+collection = client.get_or_create_collection(
+    name="rag_collection",
+    embedding_function=None,  # Embeddings pré-calculés
+    metadata={"hnsw:space": "cosine"}
 )
-RETURNS TABLE (
-  id uuid,
-  content text,
-  similarity float
-)
-AS $$
-  SELECT id, content,
-  1 - (embedding <=> query_embedding) as similarity
-  FROM chunk
-  ORDER BY embedding <=> query_embedding
-  LIMIT match_count;
-$$ LANGUAGE sql STABLE;
+
+# Métadonnées stockées:
+{
+    "document_id": "uuid",
+    "chunk_index": 0,
+    "filename": "document.txt",
+    "page_number": "256",  # ✨ NOUVEAU
+    "has_page_marker": True  # ✨ NOUVEAU
+}
 ```
 
 ---
