@@ -21,6 +21,12 @@ from fastapi.responses import FileResponse
 # Include API Router
 app.include_router(api_router, prefix="/api")
 
+from app.services.bm25_service import bm25_service
+
+@app.on_event("startup")
+async def startup_event():
+    bm25_service.initialize_from_db()
+
 # Mount static files (Frontend)
 # Try to find the frontend directory (assuming it's in ../frontend_new relative to backend/)
 frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend_new"))

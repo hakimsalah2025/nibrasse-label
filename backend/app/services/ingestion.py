@@ -79,7 +79,8 @@ def process_file_content(content: str, filename: str):
             "content": chunk['text'],
             "metadata": {
                 "page_number": chunk['page_number'] if chunk['page_number'] else "",
-                "has_page_marker": chunk['has_page_marker']
+                "has_page_marker": chunk['has_page_marker'],
+                "filename": filename
             },
             "embedding": embeddings[i], # Insert embedding directly
             "embedding_id": str(uuid.uuid4()) # Dummy ID to satisfy NOT NULL constraint (legacy column)
@@ -112,7 +113,7 @@ def process_file_content(content: str, filename: str):
         "page_number": c['metadata']['page_number']
     } for c in chunks_data]
     
-    bm25_service.build_index(texts_to_embed, new_metadatas)
+    bm25_service.add_documents(texts_to_embed, new_metadatas)
     
     # Count documents with page numbers
     chunks_with_pages = sum(1 for c in chunks_data if c['metadata'].get("page_number"))
@@ -126,78 +127,4 @@ def process_file_content(content: str, filename: str):
         "status": "processed_and_stored"
     }
     
-    # 1. Chunk text
-    chunks_with_metadata = chunk_text(content)
-    total_chunks = len(chunks_with_metadata)
-    
-    # 2. Create Document record in Supabase
-    doc_record = insert_document_record(filename, total_chunks)
-    document_id = doc_record['id']
-    
-    # 3. Prepare chunks for insertion (including embeddings)
-    chunks_data = []
-    texts_to_embed = [chunk['text'] for chunk in chunks_with_metadata]
-    
-    # Generate embeddings for all chunks in batch
-    print(f"Generating embeddings for {len(texts_to_embed)} chunks...")
-    embeddings = get_batch_embeddings(texts_to_embed)
-    
-    for i, chunk in enumerate(chunks_with_metadata):
-        chunks_data.append({
-            "document_id": document_id,
-            "chunk_index": chunk['index'],
-            "content": chunk['text'],
-            "metadata": {
-                "page_number": chunk['page_number'] if chunk['page_number'] else "",
-                "has_page_marker": chunk['has_page_marker']
-            },
-            "embedding": embeddings[i], # Insert embedding directly
-            "embedding_id": str(uuid.uuid4()) # Dummy ID to satisfy NOT NULL constraint (legacy column)
-        })
-        
-    # 4. Insert chunks into Supabase (now includes embeddings)
-    # 4. Insert chunks into Supabase (now includes embeddings)
-    # Use batching to avoid timeout with large files
-    batch_size = 100
-    total_inserted = 0
-    print(f"Inserting {len(chunks_data)} chunks into Supabase in batches of {batch_size}...")
-    
-    for i in range(0, len(chunks_data), batch_size):
-        batch = chunks_data[i:i + batch_size]
-        try:
-            insert_chunks_records(batch)
-            total_inserted += len(batch)
-            print(f"   - Inserted batch {i//batch_size + 1} ({len(batch)} chunks)")
-        except Exception as e:
-            print(f"❌ Error inserting batch {i//batch_size + 1}: {e}")
-            raise e
-    
-    # 5. Update BM25 Index
-    from app.services.bm25_service import bm25_service
-    
-    # We need to add the new chunks to the existing corpus and rebuild
-    # Note: For efficiency in production, we should load existing index and update it, 
-    # but for now we rebuild with current session's data + new data.
-    # Ideally, BM25 service should handle persistence better.
-    
-    # Construct metadata list for BM25
-    new_metadatas = [{
-        "document_id": document_id,
-        "chunk_index": c['chunk_index'],
-        "filename": filename,
-        "page_number": c['metadata']['page_number']
-    } for c in chunks_data]
-    
-    bm25_service.build_index(texts_to_embed, new_metadatas)
-    
-    # Count documents with page numbers
-    chunks_with_pages = sum(1 for c in chunks_data if c['metadata'].get("page_number"))
-    
-    return {
-        "filename": filename,
-        "total_chars": len(content),
-        "total_chunks": total_chunks,
-        "chunks_with_page_numbers": chunks_with_pages,
-        "document_id": document_id,
-        "status": "processed_and_stored"
-    }
+

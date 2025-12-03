@@ -171,12 +171,20 @@ supabase.table("chunk").insert({
     }
 })
 
-# BM25: Index lexical
-bm25_service.build_index(
-    corpus=current_corpus,
-    metadatas=current_metadatas
+# BM25: Index lexical (Mise à jour incrémentale)
+bm25_service.add_documents(
+    new_corpus=texts_to_embed,
+    new_metadatas=new_metadatas
 )
 ```
+
+### 1.4 Architecture Cloud-Ready (Stateless) ✨ NOUVEAU
+
+Pour garantir la compatibilité avec les déploiements cloud (ex: Render, Railway) où le système de fichiers est éphémère :
+
+1.  **Au démarrage :** L'application récupère tous les chunks depuis Supabase.
+2.  **Reconstruction :** L'index BM25 est reconstruit intégralement en mémoire (`initialize_from_db`).
+3.  **Avantage :** Aucune perte de données lors des redémarrages ou redéploiements.
 
 ---
 
@@ -427,7 +435,7 @@ CREATE TABLE chunk (
     content TEXT NOT NULL,
     embedding_id TEXT,
     created_at TIMESTAMP DEFAULT NOW(),
-    metadata JSONB  -- ✨ Contient page_number et has_page_marker
+    metadata JSONB  -- ✨ Contient page_number, has_page_marker ET filename
 );
 
 -- Indexes pour performance

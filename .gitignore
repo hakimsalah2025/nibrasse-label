@@ -36,6 +36,8 @@ wheels/
 
 # ChromaDB
 data/chroma_db/
+backend/data/
+*.pkl
 
 # Logs
 *.log

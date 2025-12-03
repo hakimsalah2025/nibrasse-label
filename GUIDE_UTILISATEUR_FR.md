@@ -371,6 +371,7 @@ Les documents sont stockés localement dans `backend/data/`.
 - ✅ Base de données Supabase avec authentification
 - ✅ Pas de partage de données avec des tiers
 - ⚠️ Les requêtes sont traitées par Google Gemini (API cloud)
+- ✅ **Nouveau :** Le système est "Cloud-Ready", vos données de recherche sont sauvegardées en base de données et ne sont jamais perdues, même après redémarrage.
 
 ### Q: Comment améliorer la qualité des réponses ?
 

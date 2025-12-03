@@ -82,6 +82,4 @@ def clear_database():
     print("║     Database cleared successfully!                           ║")
     print("╚═══════════════════════════════════════════════════════════════╝")
     print()
-    else:
-        # مسح كل شيء
-        clear_database()
+
