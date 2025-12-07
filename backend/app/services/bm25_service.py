@@ -23,18 +23,38 @@ class BM25Service:
         print("🔄 Building BM25 index from database...")
         try:
             supabase = get_supabase()
-            # Fetch all chunks (limit to 10000 for safety, implement pagination if needed later)
-            response = supabase.table("chunk").select("content,metadata").execute()
             
-            if not response.data:
+            all_chunks = []
+            page_size = 1000
+            start = 0
+            
+            print(f"🔄 Fetching chunks from DB in batches of {page_size}...")
+            
+            while True:
+                end = start + page_size - 1
+                response = supabase.table("chunk").select("content,metadata").range(start, end).execute()
+                
+                batch = response.data
+                if not batch:
+                    break
+                
+                all_chunks.extend(batch)
+                print(f"   - Fetched batch {start}-{end} (Total: {len(all_chunks)})")
+                
+                if len(batch) < page_size:
+                    break
+                    
+                start += page_size
+            
+            if not all_chunks:
                 print("⚠️ No chunks found in database. BM25 index will be empty.")
                 return
 
-            chunks = response.data
+            chunks = all_chunks
             corpus = [chunk['content'] for chunk in chunks]
             metadatas = [chunk['metadata'] for chunk in chunks]
             
-            print(f"✅ Fetched {len(corpus)} chunks from DB. Building index...")
+            print(f"✅ Fetched TOTAL {len(corpus)} chunks from DB. Building index...")
             
             # Build index
             tokenized_corpus = [doc.split(" ") for doc in corpus]
